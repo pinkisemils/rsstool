@@ -30,28 +30,21 @@ fn main() {
 
     for node in article_root.find(And(Name("td"), Attr("align", "center"))) {
         // Find the severity
-        let severity = match node.find(Name("img")).nth(0) {
-            Some(img) => img.attr("alt").unwrap_or("Unknown"),
-            None => "Not Found",
-        };
-       
+        let severity = node.find(Name("img")).nth(0)
+                .and_then(|img| img.attr("alt"))
+                .unwrap_or("Unknown severity");
         // Find the title
-        let title = match node.next() {
-            Some(contentcell) => contentcell.text(),
-            None => "No title found".to_string(),
-        };
+        let title = node.next()
+                .and_then(|contentcell| Some(contentcell.text()))
+                .unwrap_or("No title found".to_string());
 
         // Find the link
-        let link = match node.next() {
-            Some(contentcell) => match contentcell.find(Name("a")).nth(0) {
-                Some(link) => match link.attr("href") {
-                    Some(address) => "https://avherald.com".to_string() + address,
-                    None => "???".to_string(),
-                },
-                None => "???".to_string(),
-            },
-            None => "???".to_string(),
-        };
+        let link = node.next()
+                    .and_then(|c_cell| c_cell.find(Name("a")).nth(0)
+                        .and_then(|link| link.attr("href"))
+                        .and_then(|addr| Some("https://avherald.com".to_string() + addr)))
+                    .unwrap_or("no address found".to_string());
+
 
         println!("[{}] {}: {}", severity, title, link);
     }
